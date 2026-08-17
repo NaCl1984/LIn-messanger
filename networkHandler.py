@@ -14,7 +14,7 @@ GITHUB_LATEST_VERSION = "https://github.com/NaCl1984/LIn-messanger/releases/late
 currentServerIp = "lin-domen.giize.com"
 currentPort = 8888
 
-VERSION = "2.2.2"
+VERSION = "2.2.3"
 
 
 
