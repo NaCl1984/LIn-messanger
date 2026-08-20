@@ -142,7 +142,6 @@ def handle_incoming_message(msg):
     else:
         social_gui.show_new_message_indicator(msg.get("senderCode"))
         
-
 def auth_answer_proceed(answer):
     if answer and not update_gui.isVisible():
         social_gui.show()
@@ -218,10 +217,11 @@ def proceedUpdateRequired(dict):
     update_gui.show()
 
 def updateLater():
-    update_gui.close()
-    loading_gui.closeWithoutExit()
-    social_gui.show()
-    chat_gui.show()
+    if isConnect.is_set():
+        update_gui.close()
+        loading_gui.closeWithoutExit()
+        social_gui.show()
+        chat_gui.show()
     
 social_gui.setUserNickname(net.getUserInfo().get("nickname", ""))
 social_gui.set_new_status(net.getUserInfo().get("status", "joy"))
