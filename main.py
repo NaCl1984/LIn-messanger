@@ -14,6 +14,7 @@ import chatGui
 import socialGui
 import authGui
 import updateGui
+import loadingGui
 import networkHandler
 import subprocess
 
@@ -64,6 +65,7 @@ chat_gui = chatGui.ChatWindow()
 social_gui = socialGui.SocialWindow()
 auth_gui = authGui.authWindow()
 update_gui = updateGui.updateWindow()
+loading_gui = loadingGui.loadingWindow()
 net = networkHandler.NetworkManager(USER_INFO_PATH)
 
 chat_gui.setParent(social_gui, Qt.Window) 
@@ -138,15 +140,15 @@ def handle_incoming_message(msg):
     if msg.get("senderCode") == selectedContact:
         chat_gui.addMessage(msg)
     else:
-        # Чат с этим пользователем закрыт
-        # Здесь в будущем можно вызвать логику непрочитанных сообщений или звуковой сигнал
-        pass
+        social_gui.show_new_message_indicator(msg.get("senderCode"))
+        
 
 def auth_answer_proceed(answer):
     if answer and not update_gui.isVisible():
         social_gui.show()
         chat_gui.show()
         auth_gui.close()
+        loading_gui.closeWithoutExit()
     elif not update_gui.isVisible():
         auth_gui.show()
 
@@ -155,6 +157,7 @@ def createNewAccount():
     net.sendHandshake()
 
 def connectAbort():
+    loading_gui.closeWithoutExit()
     social_gui.show()
     chat_gui.show()
     chat_gui.setStatusNotConnected()
@@ -216,9 +219,10 @@ def proceedUpdateRequired(dict):
 
 def updateLater():
     update_gui.close()
+    loading_gui.closeWithoutExit()
     social_gui.show()
     chat_gui.show()
-
+    
 social_gui.setUserNickname(net.getUserInfo().get("nickname", ""))
 social_gui.set_new_status(net.getUserInfo().get("status", "joy"))
 
@@ -231,6 +235,10 @@ net.message_received.connect(handle_incoming_message)
 net.recoverAnswer_signal.connect(getRecoverAnswer)
 net.auth_answer_signal.connect(auth_answer_proceed)
 net.updateRequired_signal.connect(proceedUpdateRequired)
+net.loading_status_signal.connect(lambda msg: loading_gui.display_update(msg))
+loading_gui.close_app_signal.connect(QApplication.quit)
+
+loading_gui.show()
 
 social_gui.setFriendCode(getFriendCode())
 

@@ -28,6 +28,7 @@ class NetworkManager(QObject):
     recoverAnswer_signal = pyqtSignal(bool)
     auth_answer_signal = pyqtSignal(bool)
     updateRequired_signal = pyqtSignal(dict)
+    loading_status_signal = pyqtSignal(str)
     isConnect = False
 
     statusStrToInt = {
@@ -149,12 +150,13 @@ class NetworkManager(QObject):
             attempts_with_same_address += 1
             if attempts_with_same_address >= max_reconnect_attempts:
                 print(f"Достигнут лимит попыток ({max_reconnect_attempts})")
+                self.loading_status_signal.emit("Ошибка подключения \nДостигнут лимит попыток подключения")
                 self.isConnect = False
                 self.connectAbort_signal.emit()
                 break
             
             print(f"Повторная попытка подключения через 10 секунд...")
-            import time
+            self.loading_status_signal.emit(f"Подключение к серверу... \nПопытка {attempts_with_same_address}")
             time.sleep(10)
 
     def getUserInfo(self):

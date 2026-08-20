@@ -83,16 +83,25 @@ class scrollbar_point_widget(QLabel):
 class ContactItem(QWidget):
     # Сигнал, который сработает при клике на контакт
     clicked = pyqtSignal(str) 
+    newMessages = False
 
     def set_selected(self, selected: bool):
         if selected:
             self.bg.show()
+            self.newMessages.hide()
         else:
             self.bg.hide()
+
+    def set_newMsg(self, newMsg: bool):
+        if newMsg:
+            self.newMessages.show()
+        else:
+            self.newMessages.hide()
 
     def __init__(self, nickname, status, friendCode, parent=None):
         super().__init__(parent, Qt.Widget)
         bg_pix = QPixmap(imagePath + "/contact_select_highlight.png")
+        newMsg_pix = QPixmap(imagePath + "/newMessageRecived.png")
         self.setFixedSize(bg_pix.width(), bg_pix.height())
         self.nickname = nickname
         self.friendCode = friendCode
@@ -116,8 +125,13 @@ class ContactItem(QWidget):
         self.name_label.setFont(QFont("Ubuntu", pointSize=10, weight=4000))
         self.name_label.setStyleSheet("color: #3C4A25;")
 
+        # 4. иконка непрочитанных сообщений
+        self.newMessages = QLabel(self)
+        self.newMessages.setPixmap(newMsg_pix)
+        self.newMessages.setGeometry(182, 0, newMsg_pix.width(), newMsg_pix.height())
+        self.newMessages.hide()
 
-        # 4. Прозрачная кнопка ПОВЕРХ всего
+        # 5. Прозрачная кнопка ПОВЕРХ всего
         self.btn = QPushButton(self)
         self.btn.setGeometry(0, 0, 260, 50)
         self.btn.setStyleSheet("background: transparent; border: none;")
@@ -165,7 +179,9 @@ class SocialWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.contact_widgets = {}
         self.initUI()
+        
 
     def set_slave(self, slave_window):
         self.slave = slave_window
@@ -292,6 +308,12 @@ class SocialWindow(QMainWindow):
             item = ContactItem(nickname, status, friendCode, parent=self.scroll_content)
             item.clicked.connect(lambda nick, it=item: self.handle_contact_clicked(it))
             self.scroll_layout.addWidget(item)
+            self.contact_widgets[friendCode] = item
+
+    def show_new_message_indicator(self, friendCode):
+        widget = self.contact_widgets.get(friendCode)
+        if widget:
+            widget.set_newMsg(True)
 
     def handle_contact_clicked(self, clicked_item):
         if self.selectedContact != None:

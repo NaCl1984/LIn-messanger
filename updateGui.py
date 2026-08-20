@@ -1,5 +1,4 @@
 import os
-
 import PyQt5
 from PyQt5.QtWidgets import QApplication, QFrame, QMainWindow, QLabel, QScrollArea, QTextEdit, QLineEdit, QPushButton, QVBoxLayout, QWidget
 from PyQt5.QtCore import Qt
