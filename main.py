@@ -46,7 +46,13 @@ USER_INFO_PATH = get_data_path()
 
 if not os.path.exists(USER_INFO_PATH):
     with open(USER_INFO_PATH, "w", encoding="utf-8") as f:
-        userData = {"nickname": f"User{random.randint(1000, 9999)}", "status": "joy", "friendCode": "", "uuid":get_device_uuid()}
+        userData = {
+            "nickname": f"User{random.randint(1000, 9999)}", 
+            "status": "joy", 
+            "friendCode": "", 
+            "uuid":get_device_uuid(),
+            "unreadContacts": []
+            }
         json.dump(userData, f, ensure_ascii=False)
 else:
     with open(USER_INFO_PATH, "r", encoding="utf-8") as f:
@@ -75,6 +81,55 @@ chat_gui.USER_INFO_PATH = USER_INFO_PATH
 
 selectedContact = None
 recoverFriendCode = None
+
+
+
+unread_contacts = [] 
+
+def load_unread_contacts():
+    global unread_contacts
+    with open(USER_INFO_PATH, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    unread_contacts = data.get("unreadContacts", [])
+    return unread_contacts
+
+def save_unread_contacts():
+    with open(USER_INFO_PATH, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    data["unreadContacts"] = unread_contacts
+    with open(USER_INFO_PATH, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+def add_unread_contact(friendCode):
+    global unread_contacts
+    if friendCode not in unread_contacts:
+        unread_contacts.append(friendCode)
+        save_unread_contacts()
+
+def remove_unread_contact(friendCode):
+    global unread_contacts
+    if friendCode in unread_contacts:
+        unread_contacts.remove(friendCode)
+        save_unread_contacts()
+
+
+unread_contacts = load_unread_contacts()
+
+
+
+def load_unread_contacts():
+    global unread_contacts
+    with open(USER_INFO_PATH, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    unread_contacts = data.get("unreadContacts", [])
+    return unread_contacts
+
+def save_unread_contacts():
+    with open(USER_INFO_PATH, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    data["unreadContacts"] = unread_contacts
+    with open(USER_INFO_PATH, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 def safeFriendCode(code):
     with open(USER_INFO_PATH, "r", encoding="utf-8") as f:
@@ -119,10 +174,13 @@ def changedSelectedContact(nickname, friendCode):
     net.requestHistory(friendCode)
     selectedContact = friendCode
     chat_gui.setContactNickname(nickname)
+    remove_unread_contact(friendCode) 
 
 def connected(contacts):
     social_gui.update_contacts_list(contacts)
     chat_gui.setStatusConnected()
+    for friendCode in unread_contacts:
+        social_gui.show_new_message_indicator(friendCode)
 
 def recoverRequest(friendCode=getFriendCode()):
     net.requestRecover(friendCode)
@@ -141,6 +199,7 @@ def handle_incoming_message(msg):
         chat_gui.addMessage(msg)
     else:
         social_gui.show_new_message_indicator(msg.get("senderCode"))
+        add_unread_contact(msg.get("senderCode"))
         
 def auth_answer_proceed(answer):
     if answer and not update_gui.isVisible():
